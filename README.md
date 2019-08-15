@@ -1,0 +1,2 @@
+# flutter.gradle
+flutter.GRADLE
