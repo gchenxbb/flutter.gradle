@@ -1,0 +1,38 @@
+println " "
+println "##################### app模块的 build.gradle 开始! #####################"
+
+apply plugin: 'com.android.application'
+
+//android配置
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.app.gradle"
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+}
+
+apply from: 'flutter.gradle'
+
+flutter {
+    source '.'
+}
+
+println "##################### app模块的 build.gradle 结束! ##################### "
+println ' '
