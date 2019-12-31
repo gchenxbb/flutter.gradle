@@ -249,6 +249,7 @@ class FlutterPlugin implements Plugin<Project> {
                 // Build types can be extended. For example, a build type can extend the `debug` mode.
                 // In such cases, prevent creating the same task.
                 if (project.tasks.findByName(taskName) == null) {
+                    println "创建任务："+taskName
                     project.tasks.create(name: taskName, type: FlutterPluginTask) {
                         flutterExecutable this.flutterExecutable
                         buildMode buildModeValue
@@ -542,7 +543,7 @@ class FlutterPlugin implements Plugin<Project> {
                 String abiValue = PLATFORM_ARCH_MAP[targetArch]
 //                println "添加编译任务：" + variant.name + targetArch
                 String taskName = toCammelCase(["compile", FLUTTER_BUILD_PREFIX, variant.name, targetArch.replace('android-', '')])
-                println "添加编译任务名："+ taskName
+                println "添加编译任务，任务名是："+ taskName
                 FlutterTask compileTask = project.tasks.create(name: taskName, type: FlutterTask) {
                     flutterRoot this.flutterRoot
                     flutterExecutable this.flutterExecutable
@@ -574,11 +575,12 @@ class FlutterPlugin implements Plugin<Project> {
                 libFlutterPlatforms.add('android-x86')
                 libFlutterPlatforms.add('android-x64')
             }
-            //packLib任务
+            //packLib任务，拷贝so压缩到libs.jar包中
             Task packFlutterSnapshotsAndLibsTask = project.tasks.create(name: "packLibs${FLUTTER_BUILD_PREFIX}${variant.name.capitalize()}", type: Jar) {
                 destinationDir libJar.parentFile
                 archiveName libJar.name
                 libFlutterPlatforms.each { targetArch ->
+                    println "packLib任务："+ targetArch
                     // This check prevents including `libflutter.so` twice, since it's included in the base platform jar.
                     // Unfortunately, the `pickFirst` setting in `packagingOptions` does not work when the project `:flutter`
                     // is included as an implementation dependency, which causes duplicated `libflutter.so`.
@@ -592,16 +594,19 @@ class FlutterPlugin implements Plugin<Project> {
                     def engineArtifactSubdir = getEngineArtifactDirName(variant.buildType, targetArch);
                     // Include `libflutter.so`.
                     // TODO(blasten): The libs should be outside `flutter.jar` when the artifacts are downloaded.
+                    println "libFlutterPlatforms："+engineArtifactSubdir
                     from(project.zipTree("${flutterRoot}/bin/cache/artifacts/engine/${engineArtifactSubdir}/flutter.jar")) {
                         include 'lib/**'
                     }
                 }
                 dependsOn compileTasks
-                // Add the ELF library.
+                // Add the ELF library. 包含so产物的intermediates/flutter/平台/，release和profile
                 compileTasks.each { compileTask ->
                     from(compileTask.intermediateDir) {
                         include '*.so'
                         rename { String filename ->
+                            println "rename："+filename
+                            println "rename："+compileTask.intermediateDir
                             return "lib/${compileTask.abi}/lib${filename}"
                         }
                     }
@@ -628,6 +633,7 @@ class FlutterPlugin implements Plugin<Project> {
                     variant.mergeAssets.mustRunAfter("clean${variant.mergeAssets.name.capitalize()}")
                     into variant.mergeAssets.outputDir
                 }
+                println "拷贝输出目录："+variant.mergeAssets.outputDir
                 compileTasks.each { flutterTask ->
                     with flutterTask.assets
                 }
