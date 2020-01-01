@@ -95,7 +95,7 @@ class FlutterPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        println 'flutter.gradle 引入的插件apply方法开始:' + project.getName()
+        println '##################### flutter.gradle 引入的插件apply方法开始，project.getName()是：' +project.getName()+' #####################'
         project.extensions.create("flutter", FlutterExtension)
         project.afterEvaluate this.&addFlutterTasks
 
@@ -117,6 +117,8 @@ class FlutterPlugin implements Plugin<Project> {
             }
         }
         getTargetPlatforms(project).each { targetArch ->
+            //默认是android-arm和android-arm64
+            println 'getTargetPlatforms获取的目标平台：'+targetArch
             String abiValue = PLATFORM_ARCH_MAP[targetArch]
             project.android {
                 packagingOptions {
@@ -207,7 +209,7 @@ class FlutterPlugin implements Plugin<Project> {
             // added after applying the Flutter plugin.
             project.android.buildTypes.each {
                 def buildMode = buildModeFor(it)
-                println "每种构建类型添加flutter.jar依赖：" +  buildMode
+                println "each buildTypes 构建类型: $buildMode 添加flutter.jar依赖"
                 addApiDependencies(project, it.name, project.files {
                     baseJar[buildMode]
                 })
@@ -219,7 +221,7 @@ class FlutterPlugin implements Plugin<Project> {
                 })
             }
         }
-        println 'flutter.gradle 引入的插件apply方法结束'
+        println '##################### flutter.gradle 引入的插件apply方法结束 ##################### \n'
     }
 
     /**
@@ -426,7 +428,7 @@ class FlutterPlugin implements Plugin<Project> {
         } else {
             configuration = "${variantName}Compile";
         }
-        println "Add api依赖：configuration：" +  configuration
+        println "configuration:"+configuration
         project.dependencies.add(configuration, dependency, config)
     }
 
@@ -541,7 +543,6 @@ class FlutterPlugin implements Plugin<Project> {
             //每一个目标平台编译任务
             def compileTasks = targetPlatforms.collect { targetArch ->
                 String abiValue = PLATFORM_ARCH_MAP[targetArch]
-//                println "添加编译任务：" + variant.name + targetArch
                 String taskName = toCammelCase(["compile", FLUTTER_BUILD_PREFIX, variant.name, targetArch.replace('android-', '')])
                 println "添加编译任务，任务名是："+ taskName
                 FlutterTask compileTask = project.tasks.create(name: taskName, type: FlutterTask) {
@@ -600,7 +601,8 @@ class FlutterPlugin implements Plugin<Project> {
                     }
                 }
                 dependsOn compileTasks
-                // Add the ELF library. 包含so产物的intermediates/flutter/平台/，release和profile
+                // Add the ELF library.
+                // 包含so产物的intermediates/flutter/平台/，release和profile
                 compileTasks.each { compileTask ->
                     from(compileTask.intermediateDir) {
                         include '*.so'
@@ -757,6 +759,7 @@ abstract class BaseFlutterTask extends DefaultTask {
     }
 
     void buildBundle() {
+        println "源码目录："+sourceDir
         if (!sourceDir.isDirectory()) {
             throw new GradleException("Invalid Flutter source directory: ${sourceDir}")
         }

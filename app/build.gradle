@@ -30,8 +30,10 @@ dependencies {
 
 apply from: 'flutter.gradle'
 
+//在纯flutter工程中，设置source '../..'
+//因为android工程和lib是平级的在flutter根目录下，这里将lib放在了android工程下，因此修改。
 flutter {
-    source '.'
+    source '../'
 }
 
 println "##################### app模块的 build.gradle 结束! ##################### "
